@@ -6,7 +6,11 @@ export const handlePaymentSuccess = async (payload: any) => {
     return prisma.transaction.create({
         data: {
             id: data.reference,
-            merchantId: data.merchantId,
+            merchant: {
+                connect: {
+                    subAccountId: data.merchantId,
+                },
+            },
             amount: Number(data.amount),
             senderName: data.senderName,
             narration: data.narration,
