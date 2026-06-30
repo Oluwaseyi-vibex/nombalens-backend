@@ -28,6 +28,7 @@ model Merchant {
 
   transactions      Transaction[]
   customers         Customer[]
+  insights          Insight[]
 }
 
 model Customer {
@@ -67,4 +68,21 @@ model Transaction {
   transactionDate DateTime
 
   createdAt       DateTime @default(now())
+}
+
+model Insight {
+  id          String   @id @default(uuid())
+
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+
+  type        String
+
+  title       String
+
+  message     String
+
+  createdAt   DateTime @default(now())
+
+  @@index([merchantId])
 }
