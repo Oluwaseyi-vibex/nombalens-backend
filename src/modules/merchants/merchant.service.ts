@@ -15,11 +15,11 @@ export const createMerchant = async (data: CreateMerchantInput) => {
 
     try {
         // 2. Call Nomba Virtual Account API
-        const NOMBA_BASE_URL = process.env.NOMBA_BASE_URL || "https://api.nomba.com";
+        const NOMBA_BASE_URL = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
         const NOMBA_ACCOUNT_ID = process.env.NOMBA_ACCOUNT_ID;
-        
+
         // Use the secure token acquisition logic
-        const NOMBA_TOKEN = await getNombaAccessToken(); 
+        const NOMBA_TOKEN = await getNombaAccessToken();
 
         if (!NOMBA_ACCOUNT_ID) {
             console.warn("NOMBA_ACCOUNT_ID is not configured in .env. Skipping Virtual Account creation.");

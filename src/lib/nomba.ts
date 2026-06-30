@@ -10,7 +10,7 @@ export const getNombaAccessToken = async (): Promise<string> => {
     }
 
     const accountId = process.env.NOMBA_ACCOUNT_ID;
-    const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com";
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
 
     if (!accountId) {
         throw new Error("NOMBA_ACCOUNT_ID is missing from environment variables");
