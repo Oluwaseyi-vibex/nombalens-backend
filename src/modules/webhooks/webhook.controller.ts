@@ -9,6 +9,7 @@ export const receiveWebhookHandler = async (req: Request, res: Response) => {
         const signatureValue = req.headers["nomba-signature"] as string;
         const nombaTimeStamp = req.headers["nomba-timestamp"] as string;
 
+        // Signature Validation
         if (secret && signatureValue && nombaTimeStamp) {
             const data = payload.data || {};
             const merchant = data.merchant || {};
@@ -34,27 +35,46 @@ export const receiveWebhookHandler = async (req: Request, res: Response) => {
             const mySig = hmac.digest("base64");
 
             if (signatureValue.toLowerCase() !== mySig.toLowerCase()) {
-                console.error("Invalid Nomba Webhook Signature");
+                console.error("Invalid Nomba Webhook Signature:", { expected: mySig, received: signatureValue });
                 return res.status(401).json({
                     success: false,
-                    message: "Invalid webhook signature",
+                    message: "Invalid webhook signature. Request rejected.",
                 });
             }
         } else if (!secret) {
-            console.warn("NOMBA_SECRET_KEY is not set. Skipping webhook signature verification.");
+            console.warn("NOMBA_SECRET_KEY is not set. Skipping webhook signature verification. THIS IS INSECURE.");
+        } else {
+             return res.status(400).json({
+                 success: false,
+                 message: "Missing webhook signature headers",
+             });
         }
 
+        // Event Processing
         if (payload.event_type === "payment_success") {
             await webhookService.handlePaymentSuccess(payload);
+            return res.status(200).json({
+                success: true,
+                message: "Payment success event processed successfully",
+            });
         }
 
+        // Unhandled Events
+        console.info(`Received unhandled webhook event: ${payload.event_type}`);
         return res.status(200).json({
             success: true,
+            message: `Event type '${payload.event_type}' received but no specific handler implemented.`,
         });
+
     } catch (error) {
-        console.error("Webhook Error:", error);
+        console.error("Webhook Error Processing Event:", error);
+        
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        
         return res.status(500).json({
             success: false,
+            message: "Internal server error while processing webhook",
+            error: errorMessage,
         });
     }
 };
