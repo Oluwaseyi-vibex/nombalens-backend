@@ -1,80 +1,102 @@
+import { createLogger } from "../../lib/logger.js";
 import { prisma } from "../../lib/prisma.js";
+
+const log = createLogger("WebhookService");
 
 export const handlePaymentSuccess = async (payload: any) => {
     const data = payload.data || {};
     const isNested = data.transaction !== undefined;
 
-    let id, merchantInternalId, subAccountId, bankAccountNumber, amount, senderName, narration, transactionDate;
+    log.debug("Processing payment_success webhook", { isNested, requestId: payload.requestId });
+
+    let id: string | undefined;
+    let merchantInternalId: string | undefined;
+    let subAccountId: string | undefined;
+    let bankAccountNumber: string | undefined;
+    let amount: number;
+    let senderName: string | undefined;
+    let narration: string | undefined;
+    let transactionDate: Date;
 
     if (isNested) {
-        // Nomba V2 / Nested structure
         const transaction = data.transaction || {};
         const merchant = data.merchant || {};
         const customer = data.customer || {};
 
         id = transaction.transactionId;
-        // The Best Case Scenario: Nomba echoes our internal merchant UUID back!
-        merchantInternalId = transaction.aliasAccountReference || transaction.accountRef; 
+        merchantInternalId = transaction.aliasAccountReference || transaction.accountRef;
         subAccountId = merchant.userId || merchant.walletId;
         bankAccountNumber = transaction.aliasAccountNumber || transaction.accountNumber;
-        
         amount = Number(transaction.transactionAmount);
         senderName = customer.senderName;
         narration = transaction.narration;
         transactionDate = new Date(transaction.time);
+
+        log.debug("Parsed V2 payload", { id, merchantInternalId, subAccountId, bankAccountNumber, amount });
     } else {
-        // Legacy / Flat structure
         id = data.reference;
         merchantInternalId = data.accountRef;
         subAccountId = data.merchantId;
         bankAccountNumber = data.accountNumber;
-        
         amount = Number(data.amount);
         senderName = data.senderName;
         narration = data.narration;
         transactionDate = new Date(data.transactionDate);
+
+        log.debug("Parsed legacy flat payload", { id, merchantInternalId, subAccountId, bankAccountNumber, amount });
     }
 
-    // 1. Resolve merchant by exactly what we passed to Nomba (Best Case Scenario)
+    // 1. Resolve merchant by accountRef (best case — what we passed to Nomba)
     let merchantRecord = null;
-
     if (merchantInternalId) {
-        merchantRecord = await prisma.merchant.findUnique({
-            where: { id: merchantInternalId }
-        });
+        log.debug("Looking up merchant by internal ID (accountRef)", { merchantInternalId });
+        merchantRecord = await prisma.merchant.findUnique({ where: { id: merchantInternalId } });
+        if (merchantRecord) log.info("Merchant resolved via accountRef", { merchantId: merchantRecord.id });
     }
 
-    // 2. Second Best Scenario: Resolve by Bank Account Number
+    // 2. Resolve by bank account number
     if (!merchantRecord && bankAccountNumber) {
-        merchantRecord = await prisma.merchant.findFirst({
-            where: { accountNumber: bankAccountNumber }
-        });
+        log.debug("Falling back to lookup by bank account number", { bankAccountNumber });
+        merchantRecord = await prisma.merchant.findFirst({ where: { accountNumber: bankAccountNumber } });
+        if (merchantRecord) log.info("Merchant resolved via accountNumber", { merchantId: merchantRecord.id });
     }
 
-    // 3. Fallback to Sub Account ID
+    // 3. Fallback by subAccountId
     if (!merchantRecord && subAccountId) {
-        merchantRecord = await prisma.merchant.findUnique({
-            where: { subAccountId }
-        });
+        log.debug("Falling back to lookup by subAccountId", { subAccountId });
+        merchantRecord = await prisma.merchant.findUnique({ where: { subAccountId } });
+        if (merchantRecord) log.info("Merchant resolved via subAccountId", { merchantId: merchantRecord.id });
     }
 
     if (!merchantRecord) {
+        log.error("Merchant not found — cannot process transaction", undefined, {
+            transactionId: id,
+            merchantInternalId,
+            bankAccountNumber,
+            subAccountId,
+        });
         throw new Error(`Merchant not found for webhook transaction ${id}`);
     }
 
-    return prisma.transaction.create({
+    log.info("Saving transaction to database", {
+        transactionId: id,
+        merchantId: merchantRecord.id,
+        amount,
+        senderName,
+    });
+
+    const transaction = await prisma.transaction.create({
         data: {
-            id,
-            merchant: {
-                connect: {
-                    id: merchantRecord.id,
-                },
-            },
+            id: id!,
+            merchant: { connect: { id: merchantRecord.id } },
             amount,
             senderName,
             narration,
             eventType: payload.event_type,
-            transactionDate,
+            transactionDate: transactionDate!,
         },
     });
+
+    log.info("Transaction saved successfully", { transactionId: transaction.id });
+    return transaction;
 };
