@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getParentAccountHandler, getSubAccountBalanceHandler, getSubAccountDetailsHandler, } from "./nomba.controller.js";
+import { getParentAccountBalanceHandler, getParentAccountHandler, getSubAccountBalanceHandler, getSubAccountDetailsHandler, } from "./nomba.controller.js";
 const router = Router();
 router.get("/accounts/parent", getParentAccountHandler);
+router.get("/accounts/balance", getParentAccountBalanceHandler);
 router.get("/accounts/sub-account-details", getSubAccountDetailsHandler);
 router.get("/accounts/:subAccountId/balance", getSubAccountBalanceHandler);
 export default router;

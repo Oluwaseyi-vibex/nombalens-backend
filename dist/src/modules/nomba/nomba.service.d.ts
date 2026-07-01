@@ -32,5 +32,6 @@ export declare const fetchSubAccountDetails: (options: {
     subAccountId?: string;
     accountRef?: string;
 }) => Promise<NombaAccountDetailsResponse>;
+export declare const fetchParentAccountBalance: () => Promise<NombaAccountBalanceResponse>;
 export declare const fetchSubAccountBalance: (subAccountId: string) => Promise<NombaAccountBalanceResponse>;
 //# sourceMappingURL=nomba.service.d.ts.map

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import {
+  fetchParentAccountBalance,
   fetchParentAccountDetails,
   fetchSubAccountBalance,
   fetchSubAccountDetails,
@@ -50,6 +51,22 @@ export const getSubAccountDetailsHandler = async (
         ? 400
         : 500;
     res.status(status).json({ success: false, error: message });
+  }
+};
+
+export const getParentAccountBalanceHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const balance = await fetchParentAccountBalance();
+    res.status(200).json({ success: true, data: balance });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unknown error fetching Nomba parent account balance";
+    res.status(500).json({ success: false, error: message });
   }
 };
 

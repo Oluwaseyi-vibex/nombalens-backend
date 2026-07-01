@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getParentAccountBalanceHandler,
   getParentAccountHandler,
   getSubAccountBalanceHandler,
   getSubAccountDetailsHandler,
@@ -8,6 +9,7 @@ import {
 const router = Router();
 
 router.get("/accounts/parent", getParentAccountHandler);
+router.get("/accounts/balance", getParentAccountBalanceHandler);
 router.get("/accounts/sub-account-details", getSubAccountDetailsHandler);
 router.get("/accounts/:subAccountId/balance", getSubAccountBalanceHandler);
 

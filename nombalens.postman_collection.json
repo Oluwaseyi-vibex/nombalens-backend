@@ -171,6 +171,28 @@
           }
         },
         {
+          "id": "get-parent-account-balance",
+          "name": "Get Parent Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/balance",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": [
+                "{{basePath}}",
+                "{{apiVersion}}",
+                "nomba",
+                "accounts",
+                "balance"
+              ]
+            },
+            "description": "Fetch the balance of the configured Nomba parent account."
+          }
+        },
+        {
           "id": "get-sub-account-balance",
           "name": "Get Sub Account Balance",
           "request": {

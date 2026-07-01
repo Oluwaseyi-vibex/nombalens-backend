@@ -1,4 +1,4 @@
-import { fetchParentAccountDetails, fetchSubAccountBalance, fetchSubAccountDetails, } from "./nomba.service.js";
+import { fetchParentAccountBalance, fetchParentAccountDetails, fetchSubAccountBalance, fetchSubAccountDetails, } from "./nomba.service.js";
 export const getParentAccountHandler = async (req, res) => {
     try {
         const parentAccount = await fetchParentAccountDetails();
@@ -35,13 +35,27 @@ export const getSubAccountDetailsHandler = async (req, res) => {
         res.status(status).json({ success: false, error: message });
     }
 };
+export const getParentAccountBalanceHandler = async (req, res) => {
+    try {
+        const balance = await fetchParentAccountBalance();
+        res.status(200).json({ success: true, data: balance });
+    }
+    catch (error) {
+        const message = error instanceof Error
+            ? error.message
+            : "Unknown error fetching Nomba parent account balance";
+        res.status(500).json({ success: false, error: message });
+    }
+};
 export const getSubAccountBalanceHandler = async (req, res) => {
     try {
         const subAccountId = typeof req.params.subAccountId === "string"
             ? req.params.subAccountId
             : undefined;
         if (!subAccountId) {
-            res.status(400).json({ success: false, error: "subAccountId is required" });
+            res
+                .status(400)
+                .json({ success: false, error: "subAccountId is required" });
             return;
         }
         const balance = await fetchSubAccountBalance(subAccountId);

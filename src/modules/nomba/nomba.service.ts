@@ -123,6 +123,41 @@ export const fetchSubAccountDetails = async (options: {
   return resData;
 };
 
+export const fetchParentAccountBalance =
+  async (): Promise<NombaAccountBalanceResponse> => {
+    const token = await getNombaAccessToken();
+    const baseUrl = process.env.NOMBA_BASE_URL || "https://sandbox.nomba.com";
+    const parentAccountId = process.env.NOMBA_ACCOUNT_ID;
+
+    if (!parentAccountId) {
+      throw new Error("NOMBA_ACCOUNT_ID is missing from environment variables");
+    }
+
+    log.info("Fetching Nomba parent account balance", {
+      baseUrl,
+      parentAccountId,
+    });
+
+    const response = await fetch(`${baseUrl}/v1/accounts/balance`, {
+      method: "GET",
+      headers: getNombaHeaders(token, parentAccountId),
+    });
+
+    const resData = (await response.json()) as NombaAccountBalanceResponse;
+
+    if (resData.code !== "00") {
+      log.error("Failed to fetch Nomba parent account balance", undefined, {
+        code: resData.code,
+        description: resData.description,
+      });
+      throw new Error(
+        `Nomba parent account balance fetch failed: ${resData.description || resData.code}`,
+      );
+    }
+
+    return resData;
+  };
+
 export const fetchSubAccountBalance = async (
   subAccountId: string,
 ): Promise<NombaAccountBalanceResponse> => {
