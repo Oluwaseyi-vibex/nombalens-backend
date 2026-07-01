@@ -8,10 +8,10 @@ export declare const getSummaryAnalytics: (merchantId: string) => Promise<{
     monthlyRevenue: number;
     growth: number;
     totalTransactions: number;
-    businessHealth: {
-        score: string;
-        growth: number;
-        weeklyRevenue: number;
-    };
+}>;
+export declare const getBusinessHealth: (merchantId: string) => Promise<{
+    score: string;
+    growth: number;
+    weeklyRevenue: number;
 }>;
 //# sourceMappingURL=analytics.service.d.ts.map

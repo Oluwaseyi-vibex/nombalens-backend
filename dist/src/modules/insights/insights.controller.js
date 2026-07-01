@@ -18,7 +18,7 @@ export const getInsightsHandler = async (req, res) => {
     try {
         const merchantId = req.params.merchantId;
         const result = await insightsService.getInsights(merchantId);
-        return res.status(200).json({ success: true, data: result });
+        return res.status(200).json(result);
     }
     catch (error) {
         return res.status(500).json({

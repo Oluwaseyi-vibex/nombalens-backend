@@ -42,8 +42,14 @@ export const generateInsights = async (merchantId) => {
         insights,
     };
 };
-export const getInsights = async (merchantId) => prisma.insight.findMany({
-    where: { merchantId },
-    orderBy: { createdAt: "desc" },
-});
+export const getInsights = async (merchantId) => {
+    const insights = await prisma.insight.findMany({
+        where: { merchantId },
+        orderBy: { createdAt: "desc" },
+    });
+    return insights.map((insight) => ({
+        type: insight.type,
+        message: insight.message,
+    }));
+};
 //# sourceMappingURL=insights.service.js.map

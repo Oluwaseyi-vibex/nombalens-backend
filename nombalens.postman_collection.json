@@ -262,6 +262,49 @@
       }
     },
     {
+      "id": "analytics-health",
+      "name": "Analytics Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/health",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "analytics",
+            "{{merchantId}}",
+            "health"
+          ]
+        },
+        "description": "Get the business health score for a merchant. Set merchantId in the environment to the merchant UUID."
+      }
+    },
+    {
+      "id": "get-insights",
+      "name": "Get Insights",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "insights",
+            "{{merchantId}}"
+          ]
+        },
+        "description": "Retrieve insights generated for the merchant. Set merchantId in the environment to the merchant UUID."
+      }
+    },
+    {
       "id": "generate-insights",
       "name": "Generate Insights",
       "request": {

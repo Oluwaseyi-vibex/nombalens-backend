@@ -122,11 +122,14 @@ export const getSummaryAnalytics = async (merchantId) => {
         monthlyRevenue,
         growth: Number(growth.toFixed(2)),
         totalTransactions,
-        businessHealth: {
-            score: getBusinessHealthScore(growth),
-            growth: Number(growth.toFixed(2)),
-            weeklyRevenue,
-        },
+    };
+};
+export const getBusinessHealth = async (merchantId) => {
+    const summary = await getSummaryAnalytics(merchantId);
+    return {
+        score: getBusinessHealthScore(summary.growth),
+        growth: summary.growth,
+        weeklyRevenue: summary.weeklyRevenue,
     };
 };
 //# sourceMappingURL=analytics.service.js.map

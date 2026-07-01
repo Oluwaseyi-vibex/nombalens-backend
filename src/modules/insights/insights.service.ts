@@ -92,8 +92,14 @@ export const generateInsights = async (merchantId: string) => {
   };
 };
 
-export const getInsights = async (merchantId: string) =>
-  prisma.insight.findMany({
+export const getInsights = async (merchantId: string) => {
+  const insights = await prisma.insight.findMany({
     where: { merchantId },
     orderBy: { createdAt: "desc" },
   });
+
+  return insights.map((insight) => ({
+    type: insight.type,
+    message: insight.message,
+  }));
+};
