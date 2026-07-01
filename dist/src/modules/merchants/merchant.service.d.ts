@@ -13,6 +13,7 @@ export declare const createMerchant: (data: CreateMerchantInput) => Promise<{
     accountName: string | null;
     bankName: string | null;
     createdAt: Date;
+    updatedAt: Date;
 }>;
 export {};
 //# sourceMappingURL=merchant.service.d.ts.map

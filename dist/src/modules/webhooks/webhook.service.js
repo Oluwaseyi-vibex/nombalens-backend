@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+import { Prisma } from "@prisma/client";
 import { createLogger } from "../../lib/logger.js";
 import { prisma } from "../../lib/prisma.js";
 const log = createLogger("WebhookService");
@@ -75,11 +77,21 @@ export const handlePaymentSuccess = async (payload) => {
         amount,
         senderName,
     });
-    const transaction = await prisma.transaction.create({
-        data: {
-            id: id,
+    const transaction = await prisma.transaction.upsert({
+        where: { nombaTransactionId: id },
+        update: {
             merchant: { connect: { id: merchantRecord.id } },
-            amount,
+            amount: new Prisma.Decimal(amount.toFixed(2)),
+            senderName: senderName ?? null,
+            narration: narration ?? null,
+            eventType: payload.event_type,
+            transactionDate: transactionDate,
+        },
+        create: {
+            id: randomUUID(),
+            nombaTransactionId: id,
+            merchant: { connect: { id: merchantRecord.id } },
+            amount: new Prisma.Decimal(amount.toFixed(2)),
             senderName: senderName ?? null,
             narration: narration ?? null,
             eventType: payload.event_type,

@@ -1,1 +1,1 @@
-{"version":3,"file":"analytics.service.d.ts","sourceRoot":"","sources":["../../../../src/modules/analytics/analytics.service.ts"],"names":[],"mappings":"AAEA,eAAO,MAAM,gBAAgB,GAAU,YAAY,MAAM;;;EA+CxD,CAAC"}
+{"version":3,"file":"analytics.service.d.ts","sourceRoot":"","sources":["../../../../src/modules/analytics/analytics.service.ts"],"names":[],"mappings":"AAIA,eAAO,MAAM,gBAAgB,GAAU,YAAY,MAAM;;;EAiDxD,CAAC;AAEF,eAAO,MAAM,mBAAmB,GAAU,YAAY,MAAM;;;;;;;;;;;EAgG3D,CAAC"}

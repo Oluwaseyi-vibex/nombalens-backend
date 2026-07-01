@@ -1,12 +1,14 @@
+import { Prisma } from "@prisma/client";
 export declare const handlePaymentSuccess: (payload: any) => Promise<{
     id: string;
     createdAt: Date;
     merchantId: string;
-    amount: number;
+    nombaTransactionId: string;
+    customerId: string | null;
+    amount: Prisma.Decimal;
     senderName: string | null;
     narration: string | null;
     eventType: string;
     transactionDate: Date;
-    customerId: string | null;
 }>;
 //# sourceMappingURL=webhook.service.d.ts.map

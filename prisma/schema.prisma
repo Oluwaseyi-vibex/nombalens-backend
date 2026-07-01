@@ -25,7 +25,7 @@ model Merchant {
   bankName          String?
 
   createdAt         DateTime @default(now())
-
+  updatedAt         DateTime @updatedAt
   transactions      Transaction[]
   customers         Customer[]
   insights          Insight[]
@@ -39,35 +39,41 @@ model Customer {
 
   name             String
 
-  totalPaid        Float @default(0)
+  totalPaid        Decimal @default(0) @db.Decimal(18,2)
 
   lastPaymentDate  DateTime?
 
   transactions     Transaction[]
 
   createdAt        DateTime @default(now())
+
+  @@index([merchantId])
 }
 
 model Transaction {
-  id              String @id
+  id                 String @id @default(uuid())
 
-  merchantId      String
-  merchant        Merchant @relation(fields:[merchantId], references:[id])
+  nombaTransactionId String @unique
 
-  customerId      String?
-  customer        Customer? @relation(fields: [customerId], references: [id])
+  merchantId         String
+  merchant           Merchant @relation(fields:[merchantId], references:[id])
 
-  amount          Float
+  customerId         String?
+  customer           Customer? @relation(fields: [customerId], references: [id])
 
-  senderName      String?
+  amount             Decimal @db.Decimal(18,2)
 
-  narration       String?
+  senderName         String?
 
-  eventType       String
+  narration          String?
 
-  transactionDate DateTime
+  eventType          String
 
-  createdAt       DateTime @default(now())
+  transactionDate    DateTime
+
+  createdAt          DateTime @default(now())
+
+  @@index([merchantId])
 }
 
 model Insight {
@@ -77,9 +83,7 @@ model Insight {
   merchant    Merchant @relation(fields: [merchantId], references: [id])
 
   type        String
-
   title       String
-
   message     String
 
   createdAt   DateTime @default(now())
