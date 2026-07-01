@@ -1,0 +1,1 @@
+{"version":3,"file":"health.js","sourceRoot":"","sources":["../../../../../src/modules/analytics/calculators/health.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,sBAAsB,GAAG,CAAC,MAAc,EAAE,EAAE;IACvD,IAAI,MAAM,GAAG,EAAE;QAAE,OAAO,WAAW,CAAC;IACpC,IAAI,MAAM,GAAG,EAAE;QAAE,OAAO,MAAM,CAAC;IAC/B,IAAI,MAAM,GAAG,CAAC;QAAE,OAAO,SAAS,CAAC;IACjC,OAAO,MAAM,CAAC;AAChB,CAAC,CAAC"}

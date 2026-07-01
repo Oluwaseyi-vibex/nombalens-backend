@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { getBusinessHealthScore } from "./calculators/health.js";
 
 const toCurrency = (value: unknown) => Number(value?.toString() ?? 0);
 
@@ -140,13 +141,6 @@ export const getSummaryAnalytics = async (merchantId: string) => {
         : 0
       : ((weeklyRevenue - previousWeekRevenue) / previousWeekRevenue) * 100;
 
-  const getHealthScore = (value: number) => {
-    if (value > 20) return "Excellent";
-    if (value > 10) return "Good";
-    if (value > 0) return "Average";
-    return "Poor";
-  };
-
   return {
     todayRevenue,
     weeklyRevenue,
@@ -154,7 +148,7 @@ export const getSummaryAnalytics = async (merchantId: string) => {
     growth: Number(growth.toFixed(2)),
     totalTransactions,
     businessHealth: {
-      score: getHealthScore(growth),
+      score: getBusinessHealthScore(growth),
       growth: Number(growth.toFixed(2)),
       weeklyRevenue,
     },

@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
+import { getBusinessHealthScore } from "./calculators/health.js";
 const toCurrency = (value) => Number(value?.toString() ?? 0);
 export const getWeeklyRevenue = async (merchantId) => {
     const now = new Date();
@@ -36,7 +37,9 @@ export const getWeeklyRevenue = async (merchantId) => {
     const currentRevenue = toCurrency(currentWeekRevenue._sum.amount);
     const previousRevenue = toCurrency(previousWeekRevenue._sum.amount);
     const growth = previousRevenue === 0
-        ? (currentRevenue > 0 ? 100 : 0)
+        ? currentRevenue > 0
+            ? 100
+            : 0
         : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
     return {
         weeklyRevenue: currentRevenue,
@@ -54,7 +57,7 @@ export const getSummaryAnalytics = async (merchantId) => {
     previousWeekStart.setDate(now.getDate() - 14);
     previousWeekStart.setHours(0, 0, 0, 0);
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const [todayRevenueResult, weeklyRevenueResult, monthlyRevenueResult, previousWeekRevenueResult, totalTransactions] = await Promise.all([
+    const [todayRevenueResult, weeklyRevenueResult, monthlyRevenueResult, previousWeekRevenueResult, totalTransactions,] = await Promise.all([
         prisma.transaction.aggregate({
             where: {
                 merchantId,
@@ -109,17 +112,10 @@ export const getSummaryAnalytics = async (merchantId) => {
     const monthlyRevenue = toCurrency(monthlyRevenueResult._sum.amount);
     const previousWeekRevenue = toCurrency(previousWeekRevenueResult._sum.amount);
     const growth = previousWeekRevenue === 0
-        ? (weeklyRevenue > 0 ? 100 : 0)
+        ? weeklyRevenue > 0
+            ? 100
+            : 0
         : ((weeklyRevenue - previousWeekRevenue) / previousWeekRevenue) * 100;
-    const getHealthScore = (value) => {
-        if (value > 20)
-            return "Excellent";
-        if (value > 10)
-            return "Good";
-        if (value > 0)
-            return "Average";
-        return "Poor";
-    };
     return {
         todayRevenue,
         weeklyRevenue,
@@ -127,7 +123,7 @@ export const getSummaryAnalytics = async (merchantId) => {
         growth: Number(growth.toFixed(2)),
         totalTransactions,
         businessHealth: {
-            score: getHealthScore(growth),
+            score: getBusinessHealthScore(growth),
             growth: Number(growth.toFixed(2)),
             weeklyRevenue,
         },

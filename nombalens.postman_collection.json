@@ -1,0 +1,286 @@
+{
+  "info": {
+    "_postman_id": "f2a3cdff-7fc4-4d1e-b9d7-3312cc8f2cf4",
+    "name": "NombaLens API",
+    "description": "Postman collection for NombaLens local API development. Import this collection into Postman and set the environment variables before sending requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "id": "health-check",
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/health",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["{{basePath}}", "{{apiVersion}}", "health"]
+        },
+        "description": "Check whether the NombaLens service is running."
+      }
+    },
+    {
+      "id": "create-merchant",
+      "name": "Create Merchant",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"businessName\": \"Test Merchant\",\n  \"phone\": \"0700000000\",\n  \"subAccountId\": \"u1\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/merchants",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["{{basePath}}", "{{apiVersion}}", "merchants"]
+        },
+        "description": "Create a new merchant in NombaLens. The request body must include businessName, phone, and subAccountId."
+      }
+    },
+    {
+      "id": "receive-nomba-webhook",
+      "name": "Receive Nomba Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "nomba-timestamp",
+            "value": "{{nomba_timestamp}}"
+          },
+          {
+            "key": "nomba-signature",
+            "value": "{{nomba_signature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_type\": \"payment_success\",\n  \"requestId\": \"req-123\",\n  \"data\": {\n    \"transaction\": {\n      \"transactionId\": \"txn-123\",\n      \"aliasAccountReference\": \"u1\",\n      \"accountNumber\": \"1234567890\",\n      \"transactionAmount\": \"1000\",\n      \"type\": \"credit\",\n      \"responseCode\": \"\",\n      \"time\": \"2026-06-30T12:00:00.000Z\",\n      \"narration\": \"Test payment\"\n    },\n    \"merchant\": {\n      \"userId\": \"u1\",\n      \"walletId\": \"w1\"\n    },\n    \"customer\": {\n      \"senderName\": \"Test User\"\n    }\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/webhooks/nomba",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": ["{{basePath}}", "{{apiVersion}}", "webhooks", "nomba"]
+        },
+        "description": "Send a signed Nomba webhook event to the application. The signature is generated in the pre-request script using NOMBA_SECRET_KEY."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const secret = pm.environment.get('NOMBA_SECRET_KEY');",
+              "if (!secret) {",
+              "  throw new Error('NOMBA_SECRET_KEY environment variable is required');",
+              "}",
+              "const timestamp = Math.floor(Date.now() / 1000).toString();",
+              "const body = pm.request.body.raw || '';",
+              "const data = JSON.parse(body);",
+              "const merchant = data.data?.merchant || {};",
+              "const transaction = data.data?.transaction || {};",
+              "let transactionResponseCode = transaction.responseCode || '';",
+              "if (transactionResponseCode === 'null') {",
+              "  transactionResponseCode = '';",
+              "}",
+              "const hashingPayload = `${data.event_type || ''}:${data.requestId || ''}:${merchant.userId || ''}:${merchant.walletId || ''}:${transaction.transactionId || ''}:${transaction.type || ''}:${transaction.time || ''}:${transactionResponseCode}:${timestamp}`;",
+              "const signature = require('crypto').createHmac('sha256', secret).update(hashingPayload).digest('base64');",
+              "pm.environment.set('nomba_timestamp', timestamp);",
+              "pm.environment.set('nomba_signature', signature);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nomba Accounts",
+      "item": [
+        {
+          "id": "get-parent-account",
+          "name": "Get Parent Account Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/parent",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": [
+                "{{basePath}}",
+                "{{apiVersion}}",
+                "nomba",
+                "accounts",
+                "parent"
+              ]
+            },
+            "description": "Fetch the configured Nomba parent account details using the existing accountId header and access token."
+          }
+        },
+        {
+          "id": "get-sub-account-details",
+          "name": "Get Sub Account Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/sub-account-details?accountId={{subAccountId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": [
+                "{{basePath}}",
+                "{{apiVersion}}",
+                "nomba",
+                "accounts",
+                "sub-account-details"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{subAccountId}}"
+                }
+              ]
+            },
+            "description": "Fetch details for a Nomba sub-account by passing the sub-account id in the query string."
+          }
+        },
+        {
+          "id": "get-sub-account-balance",
+          "name": "Get Sub Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/{{subAccountId}}/balance",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": [
+                "{{basePath}}",
+                "{{apiVersion}}",
+                "nomba",
+                "accounts",
+                "{{subAccountId}}",
+                "balance"
+              ]
+            },
+            "description": "Fetch the balance of a Nomba sub-account using its account id."
+          }
+        }
+      ]
+    },
+    {
+      "id": "weekly-revenue",
+      "name": "Weekly Revenue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/weekly",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "analytics",
+            "{{merchantId}}",
+            "weekly"
+          ]
+        },
+        "description": "Get weekly revenue and growth for a merchant. Set merchantId in the environment to the merchant UUID."
+      }
+    },
+    {
+      "id": "analytics-summary",
+      "name": "Analytics Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/summary",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "analytics",
+            "{{merchantId}}",
+            "summary"
+          ]
+        },
+        "description": "Get today, weekly, and monthly revenue summary plus growth and business health. Set merchantId in the environment to the merchant UUID."
+      }
+    },
+    {
+      "id": "generate-insights",
+      "name": "Generate Insights",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}/generate",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "insights",
+            "{{merchantId}}",
+            "generate"
+          ]
+        },
+        "description": "Request insights generation for a merchant. Set merchantId in the environment to the merchant UUID."
+      }
+    },
+    {
+      "id": "get-insights",
+      "name": "Get Insights",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "{{port}}",
+          "path": [
+            "{{basePath}}",
+            "{{apiVersion}}",
+            "insights",
+            "{{merchantId}}"
+          ]
+        },
+        "description": "Retrieve insights generated for the merchant. Set merchantId in the environment to the merchant UUID."
+      }
+    }
+  ]
+}
