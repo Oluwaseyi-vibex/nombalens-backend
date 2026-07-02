@@ -15,7 +15,8 @@ model Merchant {
   id                String   @id @default(uuid())
 
   businessName      String
-  phone             String
+  phone             String   @unique
+  pinHash           String?
 
   subAccountId      String   @unique
 
@@ -29,6 +30,37 @@ model Merchant {
   transactions      Transaction[]
   customers         Customer[]
   insights          Insight[]
+  aiConversations   AiConversation[]
+  refreshTokens     RefreshToken[]
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  merchantId String
+  merchant   Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  createdAt  DateTime  @default(now())
+
+  @@index([merchantId])
+  @@index([expiresAt])
+}
+
+model AiConversation {
+  id         String   @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+
+  role       String
+  message    String
+
+  createdAt  DateTime @default(now())
+
+  @@index([merchantId])
+  @@index([merchantId, createdAt])
 }
 
 model Customer {

@@ -1,9 +1,17 @@
 import { type Request, type Response } from "express";
+import { getMerchantIdFromRequest } from "../../lib/merchantContext.js";
 import * as insightsService from "./insights.service.js";
 
 export const generateInsightsHandler = async (req: Request, res: Response) => {
   try {
-    const merchantId = req.params.merchantId as string;
+    const merchantId = getMerchantIdFromRequest(req);
+    if (!merchantId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
     const result = await insightsService.generateInsights(merchantId);
 
     return res.status(200).json(result);
@@ -18,7 +26,14 @@ export const generateInsightsHandler = async (req: Request, res: Response) => {
 
 export const getInsightsHandler = async (req: Request, res: Response) => {
   try {
-    const merchantId = req.params.merchantId as string;
+    const merchantId = getMerchantIdFromRequest(req);
+    if (!merchantId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
     const result = await insightsService.getInsights(merchantId);
 
     return res.status(200).json(result);

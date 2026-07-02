@@ -7,6 +7,7 @@ export declare const createMerchant: (data: CreateMerchantInput) => Promise<{
     id: string;
     businessName: string;
     phone: string;
+    pinHash: string | null;
     subAccountId: string;
     virtualAccountRef: string | null;
     accountNumber: string | null;

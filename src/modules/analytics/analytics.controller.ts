@@ -1,4 +1,5 @@
 import { type Request, type Response } from "express";
+import { getMerchantIdFromRequest } from "../../lib/merchantContext.js";
 import * as analyticsService from "./analytics.service.js";
 
 export const getWeeklyAnalyticsHandler = async (
@@ -6,7 +7,10 @@ export const getWeeklyAnalyticsHandler = async (
   res: Response,
 ) => {
   try {
-    const merchantId = req.params.merchantId as string;
+    const merchantId = getMerchantIdFromRequest(req);
+    if (!merchantId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
     const result = await analyticsService.getWeeklyRevenue(merchantId);
 
@@ -23,7 +27,10 @@ export const getSummaryAnalyticsHandler = async (
   res: Response,
 ) => {
   try {
-    const merchantId = req.params.merchantId as string;
+    const merchantId = getMerchantIdFromRequest(req);
+    if (!merchantId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
     const result = await analyticsService.getSummaryAnalytics(merchantId);
 
@@ -37,7 +44,11 @@ export const getSummaryAnalyticsHandler = async (
 
 export const getBusinessHealthHandler = async (req: Request, res: Response) => {
   try {
-    const merchantId = req.params.merchantId as string;
+    const merchantId = getMerchantIdFromRequest(req);
+    if (!merchantId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
     const result = await analyticsService.getBusinessHealth(merchantId);
 
     return res.status(200).json(result);

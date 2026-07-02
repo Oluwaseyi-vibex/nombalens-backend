@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f2a3cdff-7fc4-4d1e-b9d7-3312cc8f2cf4",
     "name": "NombaLens API",
-    "description": "Postman collection for NombaLens local API development. Import this collection into Postman and set the environment variables before sending requests.",
+    "description": "Postman collection for NombaLens API development. Import the environment file and run Auth > Register or Login first to populate accessToken and merchantId.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -13,18 +13,201 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/health",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
+          "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/health",
+          "host": ["{{baseUrl}}"],
           "path": ["{{basePath}}", "{{apiVersion}}", "health"]
         },
         "description": "Check whether the NombaLens service is running."
       }
     },
     {
+      "name": "Auth",
+      "item": [
+        {
+          "id": "auth-register",
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.success && data.data) {",
+                  "  pm.environment.set('accessToken', data.data.accessToken);",
+                  "  pm.environment.set('refreshToken', data.data.refreshToken);",
+                  "  pm.environment.set('merchantId', data.data.merchant.id);",
+                  "  pm.environment.set('subAccountId', data.data.merchant.subAccountId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Test Merchant\",\n  \"phone\": \"0700000001\",\n  \"subAccountId\": \"{{subAccountId}}\",\n  \"pin\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "auth", "register"]
+            },
+            "description": "Register a merchant with phone and PIN. Saves accessToken, refreshToken, and merchantId to the environment."
+          }
+        },
+        {
+          "id": "auth-login",
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.success && data.data) {",
+                  "  pm.environment.set('accessToken', data.data.accessToken);",
+                  "  pm.environment.set('refreshToken', data.data.refreshToken);",
+                  "  pm.environment.set('merchantId', data.data.merchant.id);",
+                  "  pm.environment.set('subAccountId', data.data.merchant.subAccountId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0700000001\",\n  \"pin\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "auth", "login"]
+            },
+            "description": "Login with phone and PIN. Saves tokens and merchantId to the environment."
+          }
+        },
+        {
+          "id": "auth-refresh",
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.success && data.data) {",
+                  "  pm.environment.set('accessToken', data.data.accessToken);",
+                  "  pm.environment.set('refreshToken', data.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "auth", "refresh"]
+            },
+            "description": "Rotate access and refresh tokens."
+          }
+        },
+        {
+          "id": "auth-logout",
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "auth", "logout"]
+            },
+            "description": "Revoke the current refresh token."
+          }
+        },
+        {
+          "id": "auth-me",
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "auth", "me"]
+            },
+            "description": "Get the authenticated merchant profile."
+          }
+        }
+      ]
+    },
+    {
       "id": "create-merchant",
-      "name": "Create Merchant",
+      "name": "Create Merchant (Admin)",
       "request": {
         "method": "POST",
         "header": [
@@ -43,14 +226,204 @@
           }
         },
         "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/merchants",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
+          "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/merchants",
+          "host": ["{{baseUrl}}"],
           "path": ["{{basePath}}", "{{apiVersion}}", "merchants"]
         },
-        "description": "Create a new merchant in NombaLens. The request body must include businessName, phone, and subAccountId."
+        "description": "Create a merchant without PIN (admin/onboarding flow). Use Auth > Register for app sign-up."
       }
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "id": "analytics-summary-auth",
+          "name": "Summary (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/analytics/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "analytics", "summary"]
+            },
+            "description": "Get revenue summary for the authenticated merchant."
+          }
+        },
+        {
+          "id": "analytics-health-auth",
+          "name": "Health (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/analytics/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "analytics", "health"]
+            },
+            "description": "Get business health for the authenticated merchant."
+          }
+        },
+        {
+          "id": "analytics-weekly-auth",
+          "name": "Weekly Revenue (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/analytics/weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "analytics", "weekly"]
+            },
+            "description": "Get weekly revenue for the authenticated merchant."
+          }
+        },
+        {
+          "id": "analytics-summary-internal",
+          "name": "Summary (Internal/Lua)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-Api-Key",
+                "value": "{{INTERNAL_API_KEY}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "analytics", "{{merchantId}}", "summary"]
+            },
+            "description": "Internal route for Lua agent tools. Requires X-Internal-Api-Key header."
+          }
+        },
+        {
+          "id": "analytics-health-internal",
+          "name": "Health (Internal/Lua)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-Api-Key",
+                "value": "{{INTERNAL_API_KEY}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "analytics", "{{merchantId}}", "health"]
+            },
+            "description": "Internal route for Lua agent tools. Requires X-Internal-Api-Key header."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Insights",
+      "item": [
+        {
+          "id": "get-insights-auth",
+          "name": "Get Insights (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/insights",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "insights"]
+            },
+            "description": "Retrieve insights for the authenticated merchant."
+          }
+        },
+        {
+          "id": "generate-insights-auth",
+          "name": "Generate Insights (Authenticated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/insights/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "insights", "generate"]
+            },
+            "description": "Generate insights for the authenticated merchant."
+          }
+        },
+        {
+          "id": "get-insights-internal",
+          "name": "Get Insights (Internal/Lua)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Internal-Api-Key",
+                "value": "{{INTERNAL_API_KEY}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "insights", "{{merchantId}}"]
+            },
+            "description": "Internal route for Lua agent tools. Requires X-Internal-Api-Key header."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "id": "ai-chat-history",
+          "name": "Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/ai/history?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "ai", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get AI chat history for the authenticated merchant."
+          }
+        }
+      ]
     },
     {
       "id": "receive-nomba-webhook",
@@ -81,13 +454,11 @@
           }
         },
         "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/webhooks/nomba",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
+          "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/webhooks/nomba",
+          "host": ["{{baseUrl}}"],
           "path": ["{{basePath}}", "{{apiVersion}}", "webhooks", "nomba"]
         },
-        "description": "Send a signed Nomba webhook event to the application. The signature is generated in the pre-request script using NOMBA_SECRET_KEY."
+        "description": "Send a signed Nomba webhook event to the application."
       },
       "event": [
         {
@@ -127,19 +498,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/parent",
-              "protocol": "http",
-              "host": ["{{host}}"],
-              "port": "{{port}}",
-              "path": [
-                "{{basePath}}",
-                "{{apiVersion}}",
-                "nomba",
-                "accounts",
-                "parent"
-              ]
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/nomba/accounts/parent",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "nomba", "accounts", "parent"]
             },
-            "description": "Fetch the configured Nomba parent account details using the existing accountId header and access token."
+            "description": "Fetch the configured Nomba parent account details."
           }
         },
         {
@@ -149,17 +512,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/sub-account-details?accountId={{subAccountId}}",
-              "protocol": "http",
-              "host": ["{{host}}"],
-              "port": "{{port}}",
-              "path": [
-                "{{basePath}}",
-                "{{apiVersion}}",
-                "nomba",
-                "accounts",
-                "sub-account-details"
-              ],
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/nomba/accounts/sub-account-details?accountId={{subAccountId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "nomba", "accounts", "sub-account-details"],
               "query": [
                 {
                   "key": "accountId",
@@ -167,7 +522,7 @@
                 }
               ]
             },
-            "description": "Fetch details for a Nomba sub-account by passing the sub-account id in the query string."
+            "description": "Fetch details for a Nomba sub-account."
           }
         },
         {
@@ -177,17 +532,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/balance",
-              "protocol": "http",
-              "host": ["{{host}}"],
-              "port": "{{port}}",
-              "path": [
-                "{{basePath}}",
-                "{{apiVersion}}",
-                "nomba",
-                "accounts",
-                "balance"
-              ]
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/nomba/accounts/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "nomba", "accounts", "balance"]
             },
             "description": "Fetch the balance of the configured Nomba parent account."
           }
@@ -199,153 +546,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/nomba/accounts/{{subAccountId}}/balance",
-              "protocol": "http",
-              "host": ["{{host}}"],
-              "port": "{{port}}",
-              "path": [
-                "{{basePath}}",
-                "{{apiVersion}}",
-                "nomba",
-                "accounts",
-                "{{subAccountId}}",
-                "balance"
-              ]
+              "raw": "{{baseUrl}}/{{basePath}}/{{apiVersion}}/nomba/accounts/{{subAccountId}}/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["{{basePath}}", "{{apiVersion}}", "nomba", "accounts", "{{subAccountId}}", "balance"]
             },
-            "description": "Fetch the balance of a Nomba sub-account using its account id."
+            "description": "Fetch the balance of a Nomba sub-account."
           }
         }
       ]
-    },
-    {
-      "id": "weekly-revenue",
-      "name": "Weekly Revenue",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/weekly",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "analytics",
-            "{{merchantId}}",
-            "weekly"
-          ]
-        },
-        "description": "Get weekly revenue and growth for a merchant. Set merchantId in the environment to the merchant UUID."
-      }
-    },
-    {
-      "id": "analytics-summary",
-      "name": "Analytics Summary",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/summary",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "analytics",
-            "{{merchantId}}",
-            "summary"
-          ]
-        },
-        "description": "Get today, weekly, and monthly revenue summary plus growth and business health. Set merchantId in the environment to the merchant UUID."
-      }
-    },
-    {
-      "id": "analytics-health",
-      "name": "Analytics Health",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/analytics/{{merchantId}}/health",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "analytics",
-            "{{merchantId}}",
-            "health"
-          ]
-        },
-        "description": "Get the business health score for a merchant. Set merchantId in the environment to the merchant UUID."
-      }
-    },
-    {
-      "id": "get-insights",
-      "name": "Get Insights",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "insights",
-            "{{merchantId}}"
-          ]
-        },
-        "description": "Retrieve insights generated for the merchant. Set merchantId in the environment to the merchant UUID."
-      }
-    },
-    {
-      "id": "generate-insights",
-      "name": "Generate Insights",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}/generate",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "insights",
-            "{{merchantId}}",
-            "generate"
-          ]
-        },
-        "description": "Request insights generation for a merchant. Set merchantId in the environment to the merchant UUID."
-      }
-    },
-    {
-      "id": "get-insights",
-      "name": "Get Insights",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "http://{{host}}:{{port}}/{{basePath}}/{{apiVersion}}/insights/{{merchantId}}",
-          "protocol": "http",
-          "host": ["{{host}}"],
-          "port": "{{port}}",
-          "path": [
-            "{{basePath}}",
-            "{{apiVersion}}",
-            "insights",
-            "{{merchantId}}"
-          ]
-        },
-        "description": "Retrieve insights generated for the merchant. Set merchantId in the environment to the merchant UUID."
-      }
     }
   ]
 }

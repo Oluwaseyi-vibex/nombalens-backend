@@ -5,12 +5,16 @@ import analyticsRoutes from "../modules/analytics/analytics.routes.js";
 import insightRoutes from "../modules/insights/insights.routes.js";
 import nombaRoutes from "../modules/nomba/nomba.routes.js";
 import paymentsRoutes from "../modules/payments/payments.routes.js";
+import aiRoutes from "../modules/ai/ai.routes.js";
+import authRoutes from "../modules/auth/auth.routes.js";
 const router = Router();
+router.use("/auth", authRoutes);
 router.use("/merchants", merchantRoutes);
 router.use("/webhooks", webhookRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/insights", insightRoutes);
 router.use("/payments", paymentsRoutes);
 router.use("/nomba", nombaRoutes);
+router.use("/ai", aiRoutes);
 export default router;
 //# sourceMappingURL=index.js.map

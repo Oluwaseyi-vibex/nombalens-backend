@@ -37,7 +37,9 @@ export const createPaymentLink = async (payload) => {
             status: response.status,
             response: responseData,
         });
-        throw new Error(responseData?.description || responseData?.message || "Failed to create payment link");
+        throw new Error(responseData?.description ||
+            responseData?.message ||
+            "Failed to create payment link");
     }
     return responseData;
 };
