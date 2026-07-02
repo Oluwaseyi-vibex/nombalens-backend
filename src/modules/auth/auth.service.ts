@@ -5,15 +5,27 @@ import {
   verifyRefreshToken,
 } from "../../lib/auth.js";
 import { createLogger } from "../../lib/logger.js";
-import { hashPin, hashToken, isValidPin, verifyPin } from "../../lib/password.js";
+import {
+  hashPin,
+  hashToken,
+  isValidPin,
+  verifyPin,
+} from "../../lib/password.js";
 import { prisma } from "../../lib/prisma.js";
 import * as merchantService from "../merchants/merchant.service.js";
 import { clearLoginAttempts, isLoginRateLimited } from "./auth.rateLimit.js";
-import type { AuthTokensResponse, LoginInput, MerchantProfile, RegisterInput } from "./auth.types.js";
+import type {
+  AuthTokensResponse,
+  LoginInput,
+  MerchantProfile,
+  RegisterInput,
+  SetPinInput,
+} from "./auth.types.js";
 
 const log = createLogger("AuthService");
 
-const normalizePhone = (phone: string): string => phone.trim().replace(/\s+/g, "");
+const normalizePhone = (phone: string): string =>
+  phone.trim().replace(/\s+/g, "");
 
 const toMerchantProfile = (merchant: {
   id: string;
@@ -68,7 +80,40 @@ const issueTokens = async (merchantId: string): Promise<AuthTokensResponse> => {
   };
 };
 
-export const register = async (input: RegisterInput): Promise<AuthTokensResponse> => {
+export const setPin = async (
+  input: SetPinInput,
+): Promise<AuthTokensResponse> => {
+  const phone = normalizePhone(input.phone);
+  const pin = input.pin.trim();
+
+  if (!phone || !pin) {
+    throw new Error("phone and pin are required");
+  }
+  if (!isValidPin(pin)) {
+    throw new Error("PIN must be 4 to 6 digits");
+  }
+
+  const merchant = await prisma.merchant.findUnique({ where: { phone } });
+  if (!merchant) {
+    throw new Error("Invalid phone number");
+  }
+  if (merchant.pinHash) {
+    throw new Error("PIN already set for this account. Use login instead.");
+  }
+
+  const pinHash = await hashPin(pin);
+  await prisma.merchant.update({
+    where: { id: merchant.id },
+    data: { pinHash },
+  });
+
+  log.info("Merchant set initial PIN", { merchantId: merchant.id, phone });
+  return issueTokens(merchant.id);
+};
+
+export const register = async (
+  input: RegisterInput,
+): Promise<AuthTokensResponse> => {
   const phone = normalizePhone(input.phone);
   const businessName = input.businessName.trim();
   const subAccountId = input.subAccountId.trim();
@@ -82,7 +127,9 @@ export const register = async (input: RegisterInput): Promise<AuthTokensResponse
     throw new Error("PIN must be 4 to 6 digits");
   }
 
-  const existingMerchant = await prisma.merchant.findUnique({ where: { phone } });
+  const existingMerchant = await prisma.merchant.findUnique({
+    where: { phone },
+  });
   if (existingMerchant) {
     throw new Error("A merchant with this phone number already exists");
   }
@@ -121,6 +168,10 @@ export const login = async (input: LoginInput): Promise<AuthTokensResponse> => {
     throw new Error("Invalid phone or PIN");
   }
 
+  if (!merchant.pinHash) {
+    throw new Error("PIN_NOT_SET"); // let the client catch this and route to /set-pin
+  }
+
   const pinMatches = await verifyPin(pin, merchant.pinHash);
   if (!pinMatches) {
     throw new Error("Invalid phone or PIN");
@@ -132,14 +183,18 @@ export const login = async (input: LoginInput): Promise<AuthTokensResponse> => {
   return issueTokens(merchant.id);
 };
 
-export const refresh = async (refreshToken: string): Promise<AuthTokensResponse> => {
+export const refresh = async (
+  refreshToken: string,
+): Promise<AuthTokensResponse> => {
   const trimmedToken = refreshToken.trim();
   if (!trimmedToken) {
     throw new Error("refreshToken is required");
   }
 
   const { merchantId, tokenId } = verifyRefreshToken(trimmedToken);
-  const storedToken = await prisma.refreshToken.findUnique({ where: { id: tokenId } });
+  const storedToken = await prisma.refreshToken.findUnique({
+    where: { id: tokenId },
+  });
 
   if (
     !storedToken ||
@@ -167,7 +222,9 @@ export const logout = async (refreshToken: string): Promise<void> => {
 
   try {
     const { merchantId, tokenId } = verifyRefreshToken(trimmedToken);
-    const storedToken = await prisma.refreshToken.findUnique({ where: { id: tokenId } });
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { id: tokenId },
+    });
 
     if (
       storedToken &&
@@ -185,7 +242,9 @@ export const logout = async (refreshToken: string): Promise<void> => {
   }
 };
 
-export const getProfile = async (merchantId: string): Promise<MerchantProfile> => {
+export const getProfile = async (
+  merchantId: string,
+): Promise<MerchantProfile> => {
   const merchant = await prisma.merchant.findUnique({
     where: { id: merchantId },
     select: {

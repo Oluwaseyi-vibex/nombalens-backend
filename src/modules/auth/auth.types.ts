@@ -1,3 +1,8 @@
+export interface SetPinInput {
+  phone: string;
+  pin: string;
+}
+
 export interface RegisterInput {
   businessName: string;
   phone: string;

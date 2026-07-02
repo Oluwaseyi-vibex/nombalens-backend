@@ -5,31 +5,48 @@ import * as authService from "./auth.service.js";
 const log = createLogger("AuthController");
 
 const getErrorStatus = (message: string): number => {
-  if (message.includes("already exists")) {
+  if (message.includes("already exists") || message.includes("already set")) {
     return 409;
   }
-
   if (
     message.includes("Invalid phone or PIN") ||
     message.includes("Invalid or expired refresh token") ||
-    message.includes("refreshToken is required")
+    message.includes("refreshToken is required") ||
+    message.includes("PIN_NOT_SET")
   ) {
     return 401;
   }
-
   if (message.includes("Too many login attempts")) {
     return 429;
   }
-
   if (message.includes("required") || message.includes("PIN must")) {
     return 400;
   }
-
-  if (message.includes("not found")) {
+  if (
+    message.includes("not found") ||
+    message.includes("Invalid phone number")
+  ) {
     return 404;
   }
-
   return 500;
+};
+
+export const setPinHandler = async (req: Request, res: Response) => {
+  try {
+    const result = await authService.setPin(req.body);
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Setting PIN failed";
+    log.error("Set PIN failed", error, { body: req.body });
+    return res.status(getErrorStatus(message)).json({
+      success: false,
+      message,
+    });
+  }
 };
 
 export const registerHandler = async (req: Request, res: Response) => {
@@ -41,7 +58,8 @@ export const registerHandler = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Registration failed";
+    const message =
+      error instanceof Error ? error.message : "Registration failed";
     log.error("Registration failed", error, { body: req.body });
 
     return res.status(getErrorStatus(message)).json({
@@ -87,7 +105,8 @@ export const refreshHandler = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Token refresh failed";
+    const message =
+      error instanceof Error ? error.message : "Token refresh failed";
 
     return res.status(getErrorStatus(message)).json({
       success: false,
@@ -134,7 +153,8 @@ export const meHandler = async (req: Request, res: Response) => {
       data: merchant,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load profile";
+    const message =
+      error instanceof Error ? error.message : "Failed to load profile";
 
     return res.status(getErrorStatus(message)).json({
       success: false,
